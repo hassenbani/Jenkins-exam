@@ -1,51 +1,102 @@
 pipeline {
+    environment {
+        DOCKER_ID = "hasaron"
+        DOCKER_IMAGE = "datascientestapi"
+        DOCKER_TAG = "v.${BUILD_ID}.0"
+    }
     agent any
-
     stages {
-        stage('Declarative: Checkout SCM') {
-            steps {
-                checkout scm
-            }
-        }
         stage('Docker Build') {
             steps {
-                sh 'docker build -t hasaron/datascientestapi:v.35.0 ./cast-service'
+                script {
+                    sh '''
+                    docker rm -f jenkins
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG .
+                    sleep 6
+                    '''
+                }
             }
         }
-        stage('Docker Run') {
+        stage('Docker run') {
             steps {
-                sh '''
-                    docker stop jenkins || true
-                    docker rm jenkins || true
-                    docker run -d -p 80:80 --name jenkins hasaron/datascientestapi:v.35.0
-                '''
-                sleep 10
+                script {
+                    sh '''
+                    docker run -d -p 80:80 --name jenkins $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+                    sleep 10
+                    '''
+                }
             }
         }
         stage('Test Acceptance') {
             steps {
-                sh 'curl localhost'
+                script {
+                    sh 'curl localhost'
+                }
             }
         }
         stage('Docker Push') {
+            environment {
+                DOCKER_PASS = credentials("DOCKER_HUB_PASS")
+            }
             steps {
                 script {
-                    def dockerPass = env.DOCKER_HUB_PASS
-                    sh """
-                        docker login -u hasaron -p '${dockerPass}'
-                        docker push hasaron/datascientestapi:v.35.0
-                    """
+                    sh '''
+                    docker login -u $DOCKER_ID -p $DOCKER_PASS
+                    docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+                    '''
                 }
             }
         }
         stage('Deploiement en dev') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
             steps {
                 script {
                     sh '''
-                        cp cast-service/values.yaml values.yml
-                        sed -i 's+tag.*+tag: v.35.0+g' values.yml
-                        chmod +r /home/ubuntu/.kube/config
-                        helm upgrade --install app cast-service --values=values.yml --namespace dev
+                    rm -Rf .kube
+                    mkdir .kube
+                    cat $KUBECONFIG > .kube/config
+                    cp fastapi/values.yaml values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app fastapi --values=values.yml --namespace dev
+                    '''
+                }
+            }
+        }
+        stage('Deploiement en staging') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
+            steps {
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    cat $KUBECONFIG > .kube/config
+                    cp fastapi/values.yaml values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app fastapi --values=values.yml --namespace staging
+                    '''
+                }
+            }
+        }
+        stage('Deploiement en prod') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
+            steps {
+                timeout(time: 15, unit: "MINUTES") {
+                    input message: 'Do you want to deploy in production ?', ok: 'Yes'
+                }
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    cat $KUBECONFIG > .kube/config
+                    cp fastapi/values.yaml values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app fastapi --values=values.yml --namespace prod
                     '''
                 }
             }
