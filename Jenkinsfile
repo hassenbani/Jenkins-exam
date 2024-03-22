@@ -35,15 +35,12 @@ pipeline {
 
         stage('Deploy Production') {
             when {
-                branch 'master'
                 beforeAgent true
-                environment {
-                    deploymentApproval = input message: 'Deploy to production?', ok: 'Deploy'
-                }
+                expression { branch 'master' }
             }
             steps {
                 script {
-                    sh 'bash deploy_prod.sh'
+                    def deploymentApproval = input message: 'Deploy to production?', ok: 'Deploy'
                 }
             }
         }
