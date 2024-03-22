@@ -56,7 +56,7 @@ pipeline {
                     sh '''
                     rm -Rf .kube
                     mkdir .kube
-                    cat $KUBECONFIG > .kube/config
+                    cp $KUBECONFIG .kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace dev
@@ -70,7 +70,7 @@ pipeline {
                     sh '''
                     rm -Rf .kube
                     mkdir .kube
-                    cat $KUBECONFIG > .kube/config
+                    cp $KUBECONFIG .kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace staging
@@ -84,7 +84,7 @@ pipeline {
                     sh '''
                     rm -Rf .kube
                     mkdir .kube
-                    cat $KUBECONFIG > .kube/config
+                    cp $KUBECONFIG .kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace qa
@@ -101,7 +101,7 @@ pipeline {
                     sh '''
                     rm -Rf .kube
                     mkdir .kube
-                    cat $KUBECONFIG > .kube/config
+                    cp $KUBECONFIG .kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace prod
