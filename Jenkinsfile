@@ -30,7 +30,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    for (namespace in NAMESPACES) {
+                    for (String namespace in NAMESPACES) {
                         def deployEnv = "deploy-${namespace}"
                         sh "helm upgrade --install ${deployEnv} ./cast-service --namespace ${namespace} -f ./cast-service/values.yaml"
                         sh "helm upgrade --install ${deployEnv} ./movie-service --namespace ${namespace} -f ./movie-service/values.yaml"
