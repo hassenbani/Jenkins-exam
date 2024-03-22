@@ -24,15 +24,13 @@ pipeline {
             }
         }
         stage('Docker Push') {
-            environment {
-                DOCKER_PASS = credentials('DOCKER_HUB_PASS')
-            }
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    sh '''
-                        docker login -u $DOCKER_USER -p $DOCKER_PASS
+                script {
+                    def dockerPass = env.DOCKER_HUB_PASS
+                    sh """
+                        docker login -u <your_docker_username> -p '${dockerPass}'
                         docker push hasaron/datascientestapi:v.35.0
-                    '''
+                    """
                 }
             }
         }
