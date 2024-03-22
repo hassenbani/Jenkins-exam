@@ -29,7 +29,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: movie-service
+  #name: movie-service
+  name: {{ include "movie-service.fullname" . }}
 spec:
   selector:
     app: movie-service
