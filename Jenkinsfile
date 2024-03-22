@@ -56,9 +56,8 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    rm -Rf .kube
-                    mkdir .kube
-                    cat $KUBECONFIG > .kube/config
+                    mkdir -p $HOME/.kube
+                    cp ${KUBECONFIG} $HOME/.kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace dev
@@ -73,9 +72,8 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    rm -Rf .kube
-                    mkdir .kube
-                    cat $KUBECONFIG > .kube/config
+                    mkdir -p $HOME/.kube
+                    cp ${KUBECONFIG} $HOME/.kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace staging
@@ -90,9 +88,8 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    rm -Rf .kube
-                    mkdir .kube
-                    cat $KUBECONFIG > .kube/config
+                    mkdir -p $HOME/.kube
+                    cp ${KUBECONFIG} $HOME/.kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace qa
@@ -110,9 +107,8 @@ pipeline {
                 }
                 script {
                     sh '''
-                    rm -Rf .kube
-                    mkdir .kube
-                    cat $KUBECONFIG > .kube/config
+                    mkdir -p $HOME/.kube
+                    cp ${KUBECONFIG} $HOME/.kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace prod
