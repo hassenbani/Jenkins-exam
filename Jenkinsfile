@@ -4,6 +4,7 @@ pipeline {
         DOCKER_IMAGE = "datascientestapi"
         DOCKER_TAG = "v.${BUILD_ID}.0"
         KUBECONFIG = credentials("config")
+        DOCKER_PASS = credentials("DOCKER_HUB_PASS")
     }
     agent any
 
@@ -19,7 +20,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Docker run') {
             steps {
                 script {
@@ -40,9 +41,6 @@ pipeline {
         }
 
         stage('Docker Push') {
-            environment {
-                DOCKER_PASS = credentials("DOCKER_HUB_PASS")
-            }
             steps {
                 script {
                     sh '''
@@ -54,16 +52,12 @@ pipeline {
         }
 
         stage('Deploiement en dev') {
-            environment {
-                KUBECONFIG = credentials("config")
-            }
             steps {
                 script {
                     sh '''
-                    sudo rm -Rf .kube
-                    sudo mkdir .kube
-                    sudo cat $KUBECONFIG > .kube/config
-                    sudo cp movie-service/values.yaml values.yml
+                    mkdir -p ~/.kube
+                    cp $KUBECONFIG ~/.kube/config
+                    cp movie-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app movie-service --values=values.yml --namespace dev
                     '''
@@ -72,16 +66,12 @@ pipeline {
         }
 
         stage('Deploiement en staging') {
-            environment {
-                KUBECONFIG = credentials("config")
-            }
             steps {
                 script {
                     sh '''
-                    sudo rm -Rf .kube
-                    sudo mkdir .kube
-                    sudo cat $KUBECONFIG > .kube/config
-                    sudo cp movie-service/values.yaml values.yml
+                    mkdir -p ~/.kube
+                    cp $KUBECONFIG ~/.kube/config
+                    cp movie-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app movie-service --values=values.yml --namespace staging
                     '''
@@ -90,16 +80,12 @@ pipeline {
         }
 
         stage('Deploiement en qa') {
-            environment {
-                KUBECONFIG = credentials("config")
-            }
             steps {
                 script {
                     sh '''
-                    sudo rm -Rf .kube
-                    sudo mkdir .kube
-                    sudo cat $KUBECONFIG > .kube/config
-                    sudo cp movie-service/values.yaml values.yml
+                    mkdir -p ~/.kube
+                    cp $KUBECONFIG ~/.kube/config
+                    cp movie-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app movie-service --values=values.yml --namespace qa
                     '''
@@ -108,19 +94,15 @@ pipeline {
         }
 
         stage('Deploiement en prod') {
-            environment {
-                KUBECONFIG = credentials("config")
-            }
             steps {
                 timeout(time: 15, unit: "MINUTES") {
                     input message: 'Do you want to deploy in production ?', ok: 'Yes'
                 }
                 script {
                     sh '''
-                    sudo rm -Rf .kube
-                    sudo mkdir .kube
-                    sudo cat $KUBECONFIG > .kube/config
-                    sudo cp movie-service/values.yaml values.yml
+                    mkdir -p ~/.kube
+                    cp $KUBECONFIG ~/.kube/config
+                    cp movie-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app movie-service --values=values.yml --namespace prod
                     '''
