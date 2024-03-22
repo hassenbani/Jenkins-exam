@@ -27,7 +27,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: cast-service
+  #name: cast-service
+  name: {{ include "cast-service.fullname" . }}
 spec:
   selector:
     app: cast-service
