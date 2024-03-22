@@ -60,8 +60,8 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    rm -Rf .kube
-                    mkdir .kube
+                    sudo rm -Rf .kube
+                    sudo mkdir .kube
                     cat $KUBECONFIG > .kube/config
                     cp movie-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
@@ -78,8 +78,8 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    rm -Rf .kube
-                    mkdir .kube
+                    sudo rm -Rf .kube
+                    sudo mkdir .kube
                     cat $KUBECONFIG > .kube/config
                     cp movie-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
@@ -96,8 +96,8 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    rm -Rf .kube
-                    mkdir .kube
+                    sudo rm -Rf .kube
+                    sudo mkdir .kube
                     cat $KUBECONFIG > .kube/config
                     cp movie-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
@@ -117,8 +117,8 @@ pipeline {
                 }
                 script {
                     sh '''
-                    rm -Rf .kube
-                    mkdir .kube
+                    sudo rm -Rf .kube
+                    sudo mkdir .kube
                     cat $KUBECONFIG > .kube/config
                     cp movie-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
