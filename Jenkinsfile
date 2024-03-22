@@ -54,9 +54,9 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    rm -Rf .kube
-                    mkdir .kube
-                    cp $KUBECONFIG .kube/config
+                    sudo rm -Rf .kube
+                    sudo mkdir .kube
+                    sudo cp $KUBECONFIG .kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace dev
@@ -68,9 +68,9 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    rm -Rf .kube
-                    mkdir .kube
-                    cp $KUBECONFIG .kube/config
+                    sudo rm -Rf .kube
+                    sudo mkdir .kube
+                    sudo cp $KUBECONFIG .kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace staging
@@ -82,9 +82,9 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    rm -Rf .kube
-                    mkdir .kube
-                    cp $KUBECONFIG .kube/config
+                    sudo rm -Rf .kube
+                    sudo mkdir .kube
+                    sudo cp $KUBECONFIG .kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace qa
@@ -99,9 +99,9 @@ pipeline {
                 }
                 script {
                     sh '''
-                    rm -Rf .kube
-                    mkdir .kube
-                    cp $KUBECONFIG .kube/config
+                    sudo rm -Rf .kube
+                    sudo mkdir .kube
+                    sudo cp $KUBECONFIG .kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace prod
