@@ -11,7 +11,7 @@ pipeline {
                 script {
                     sh '''
                     docker rm -f jenkins
-                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG .
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./cast-service
                     sleep 6
                     '''
                 }
