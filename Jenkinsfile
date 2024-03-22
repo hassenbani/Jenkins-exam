@@ -51,13 +51,11 @@ pipeline {
         }
         stage('Deploiement en dev') {
             environment {
-                KUBECONFIG = credentials("config")
+                KUBECONFIG = "/home/ubuntu/.kube/config"
             }
             steps {
                 script {
                     sh '''
-                    mkdir -p $HOME/.kube
-                    cp ${KUBECONFIG} $HOME/.kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace dev
@@ -67,13 +65,11 @@ pipeline {
         }
         stage('Deploiement en staging') {
             environment {
-                KUBECONFIG = credentials("config")
+                KUBECONFIG = "/home/ubuntu/.kube/config"
             }
             steps {
                 script {
                     sh '''
-                    mkdir -p $HOME/.kube
-                    cp ${KUBECONFIG} $HOME/.kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace staging
@@ -83,13 +79,11 @@ pipeline {
         }
         stage('Deploiement en qa') {
             environment {
-                KUBECONFIG = credentials("config")
+                KUBECONFIG = "/home/ubuntu/.kube/config"
             }
             steps {
                 script {
                     sh '''
-                    mkdir -p $HOME/.kube
-                    cp ${KUBECONFIG} $HOME/.kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace qa
@@ -99,7 +93,7 @@ pipeline {
         }
         stage('Deploiement en prod') {
             environment {
-                KUBECONFIG = credentials("config")
+                KUBECONFIG = "/home/ubuntu/.kube/config"
             }
             steps {
                 timeout(time: 15, unit: "MINUTES") {
@@ -107,8 +101,6 @@ pipeline {
                 }
                 script {
                     sh '''
-                    mkdir -p $HOME/.kube
-                    cp ${KUBECONFIG} $HOME/.kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace prod
