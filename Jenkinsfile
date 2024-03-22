@@ -1,74 +1,121 @@
 pipeline {
+    environment {
+        DOCKER_ID = "hasaron"
+        DOCKER_IMAGE = "datascientestapi"
+        DOCKER_TAG = "v.${BUILD_ID}.0"
+    }
     agent any
-
     stages {
-        stage('Cloning repository') {
-            steps {
-                git 'git@github.com:hassenbani/Jenkins-exam.git'
-            }
-        }
-
-        stage('Building Docker images') {
+        stage('Docker Build') {
             steps {
                 script {
-                    docker.build('movie-service', './movie-service')
-                    docker.build('cast-service', './cast-service')
+                    sh '''
+                    docker rm -f jenkins
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG .
+                    sleep 6
+                    '''
                 }
             }
         }
-
-        stage('Pushing Docker images to DockerHub') {
+        stage('Docker run') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerHubCredentials') {
-                        docker.image('movie-service').push('latest')
-                        docker.image('cast-service').push('latest')
-                    }
+                    sh '''
+                    docker run -d -p 80:80 --name jenkins $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+                    sleep 10
+                    '''
                 }
             }
         }
-
-        stage('Deploying to Kubernetes') {
+        stage('Test Acceptance') {
             steps {
                 script {
-                    // Apply Kubernetes manifests for each service in the respective namespaces
-                    sh 'kubectl apply -f movie-service/kubernetes-manifests/dev.yaml -n dev'
-                    sh 'kubectl apply -f cast-service/kubernetes-manifests/dev.yaml -n dev'
-                    // Similar steps for other environments like QA, staging, prod
+                    sh '''
+                    curl localhost
+                    '''
                 }
             }
         }
-
-        stage('Manual deployment to prod') {
-            when {
-                branch 'master'
+        stage('Docker Push') {
+            environment {
+                DOCKER_PASS = credentials("DOCKER_HUB_PASS")
             }
             steps {
-                input 'Deploy to prod?'
                 script {
-                    // Apply Kubernetes manifests for prod environment
-                    sh 'kubectl apply -f movie-service/kubernetes-manifests/prod.yaml -n prod'
-                    sh 'kubectl apply -f cast-service/kubernetes-manifests/prod.yaml -n prod'
+                    sh '''
+                    docker login -u $DOCKER_ID -p $DOCKER_PASS
+                    docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+                    '''
+                }
+            }
+        }
+        stage('Deploiement en dev') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
+            steps {
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    ls
+                    cat $KUBECONFIG > .kube/config
+                    cp fastapi/values.yaml values.yml
+                    cat values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app fastapi --values=values.yml --namespace dev
+                    '''
+                }
+            }
+        }
+        stage('Deploiement en staging') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
+            steps {
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    ls
+                    cat $KUBECONFIG > .kube/config
+                    cp fastapi/values.yaml values.yml
+                    cat values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app fastapi --values=values.yml --namespace staging
+                    '''
+                }
+            }
+        }
+        stage('Deploiement en prod') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
+            steps {
+                timeout(time: 15, unit: "MINUTES") {
+                    input message: 'Do you want to deploy in production ?', ok: 'Yes'
+                }
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    ls
+                    cat $KUBECONFIG > .kube/config
+                    cp fastapi/values.yaml values.yml
+                    cat values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app fastapi --values=values.yml --namespace prod
+                    '''
                 }
             }
         }
     }
-
     post {
         always {
-            // Clean up any resources if needed
             sh 'kubectl delete namespace dev'
             sh 'kubectl delete namespace qa'
             sh 'kubectl delete namespace staging'
         }
     }
 }
-
-// Définition des identifiants DockerHub
-credentials {
-    id = 'dockerHubCredentials'
-    username = 'hasaron@gmail.com'
-    password = env.DOCKER_HUB_PASS
-}
-
 
