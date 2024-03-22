@@ -1,40 +1,122 @@
 pipeline {
-    agent any
-
     environment {
-        KUBECONFIG = '/home/ubuntu/.kube/config' // Chemin vers le fichier de configuration Kubernetes
-        DOCKER_HUB_USERNAME = 'hasaron' // Nom d'utilisateur Docker Hub
-        DOCKER_HUB_PASS = credentials('DOCKER_HUB_PASS') // Identifiants Docker Hub
-        NAMESPACES = ['staging', 'dev', 'qa', 'prod'] // Noms des espaces de noms Kubernetes
+        DOCKER_ID = "hasaron"
+        DOCKER_IMAGE = "datascientestapi"
+        DOCKER_TAG = "v.${BUILD_ID}.0"
     }
-
+    agent any
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Build and Push Docker Images') {
+        stage('Docker Build') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_USERNAME, DOCKER_HUB_PASS) {
-                        docker.build('your-docker-image:latest', './cast-service')
-                        docker.build('your-docker-image:latest', './movie-service')
-                        docker.push('your-docker-image:latest')
-                    }
+                    sh '''
+                    docker rm -f jenkins
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG .
+                    sleep 6
+                    '''
                 }
             }
         }
-
-        stage('Deploy to Kubernetes') {
+        stage('Docker run') {
             steps {
                 script {
-                    for (String namespace in NAMESPACES) {
-                        def deployEnv = "deploy-${namespace}"
-                        sh "helm upgrade --install ${deployEnv} ./cast-service --namespace ${namespace} -f ./cast-service/values.yaml"
-                        sh "helm upgrade --install ${deployEnv} ./movie-service --namespace ${namespace} -f ./movie-service/values.yaml"
-                    }
+                    sh '''
+                    docker run -d -p 80:80 --name jenkins $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+                    sleep 10
+                    '''
+                }
+            }
+        }
+        stage('Test Acceptance') {
+            steps {
+                script {
+                    sh '''
+                    curl localhost
+                    '''
+                }
+            }
+        }
+        stage('Docker Push') {
+            environment {
+                DOCKER_PASS = credentials("DOCKER_HUB_PASS")
+            }
+            steps {
+                script {
+                    sh '''
+                    docker login -u $DOCKER_ID -p $DOCKER_PASS
+                    docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+                    '''
+                }
+            }
+        }
+        stage('Deploiement en dev') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
+            steps {
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    cat $KUBECONFIG > .kube/config
+                    cp cast-service/values.yaml values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app cast-service --values=values.yml --namespace dev
+                    '''
+                }
+            }
+        }
+        stage('Deploiement en staging') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
+            steps {
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    cat $KUBECONFIG > .kube/config
+                    cp cast-service/values.yaml values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app cast-service --values=values.yml --namespace staging
+                    '''
+                }
+            }
+        }
+        stage('Deploiement en qa') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
+            steps {
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    cat $KUBECONFIG > .kube/config
+                    cp cast-service/values.yaml values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app cast-service --values=values.yml --namespace qa
+                    '''
+                }
+            }
+        }
+        stage('Deploiement en prod') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
+            steps {
+                timeout(time: 15, unit: "MINUTES") {
+                    input message: 'Do you want to deploy in production ?', ok: 'Yes'
+                }
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    cat $KUBECONFIG > .kube/config
+                    cp cast-service/values.yaml values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app cast-service --values=values.yml --namespace prod
+                    '''
                 }
             }
         }
