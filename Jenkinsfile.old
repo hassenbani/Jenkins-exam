@@ -1,0 +1,105 @@
+pipeline {
+    environment {
+        DOCKER_ID = "hasaron" // Remplacez ceci par votre identifiant Docker
+        DOCKER_IMAGE = "jenkins-exam"
+        DOCKER_TAG = "v.${BUILD_ID}.0" // Nous étiquetons nos images avec le numéro de build actuel pour incrémenter la valeur de 1 à chaque nouvelle construction
+    }
+    agent any // Jenkins pourra sélectionner tous les agents disponibles
+    stages {
+        stage('Docker Build') { // Étape de construction de l'image Docker
+            steps {
+                script {
+                    sh '''
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG .
+                    '''
+                }
+            }
+        }
+        stage('Docker Run') { // Exécute le conteneur à partir de notre image construite
+            steps {
+                script {
+                    sh '''
+                    docker run -d -p 80:80 --name jenkins $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+                    '''
+                }
+            }
+        }
+        stage('Test Acceptance') { // Nous lançons la commande curl pour valider que le conteneur répond à la requête
+            steps {
+                script {
+                    sh '''
+                    curl localhost
+                    '''
+                }
+            }
+        }
+        stage('Docker Push') { // Nous passons l'image construite à notre compte Docker Hub
+            environment {
+                DOCKER_PASS = credentials("DOCKER_HUB_PASS") // Nous récupérons le mot de passe Docker depuis un texte secret appelé DOCKER_HUB_PASS enregistré sur Jenkins
+            }
+            steps {
+                script {
+                    sh '''
+                    docker login -u $DOCKER_ID -p $DOCKER_PASS
+                    docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+                    '''
+                }
+            }
+        }
+        stage('Déploiement en dev') {
+            environment {
+                KUBECONFIG = credentials("config") // Nous récupérons kubeconfig depuis un fichier secret appelé config enregistré sur Jenkins
+            }
+            steps {
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    cat $KUBECONFIG > .kube/config
+                    cp fastapi/values.yaml values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app fastapi --values=values.yml --namespace dev
+                    '''
+                }
+            }
+        }
+        stage('Déploiement en staging') {
+            environment {
+                KUBECONFIG = credentials("config") // Nous récupérons kubeconfig depuis un fichier secret appelé config enregistré sur Jenkins
+            }
+            steps {
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    cat $KUBECONFIG > .kube/config
+                    cp fastapi/values.yaml values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app fastapi --values=values.yml --namespace staging
+                    '''
+                }
+            }
+        }
+        stage('Déploiement en prod') {
+            environment {
+                KUBECONFIG = credentials("config") // Nous récupérons kubeconfig depuis un fichier secret appelé config enregistré sur Jenkins
+            }
+            steps {
+                timeout(time: 15, unit: "MINUTES") {
+                    input message: 'Souhaitez-vous déployer en production ?', ok: 'Oui' // Crée un bouton d'approbation avec un délai de 15 minutes
+                }
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    cat $KUBECONFIG > .kube/config
+                    cp fastapi/values.yaml values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app fastapi --values=values.yml --namespace prod
+                    '''
+                }
+            }
+        }
+    }
+}
+

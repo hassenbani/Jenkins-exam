@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "movie-service.fullname" . }}
+  labels:
+    app: {{ include "movie-service.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "movie-service.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "movie-service.name" . }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          env:
+            - name: DATABASE_URI
+              value: "postgresql://movie_db_username:movie_db_password@movie-db/movie_db_dev"
+            - name: CAST_SERVICE_HOST_URL
+              value: "http://cast-service:8000/api/v1/casts/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: movie-service
+spec:
+  selector:
+    app: movie-service
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+
