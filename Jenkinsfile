@@ -1,13 +1,13 @@
 pipeline {
     agent any
-    
+
     stages {
         stage('Cloning repository') {
             steps {
-                git 'git@github.com:hassenbani/Jenkins-datascientest-exam.git'
+                git 'git@github.com:hassenbani/Jenkins-exam.git'
             }
         }
-        
+
         stage('Building Docker images') {
             steps {
                 script {
@@ -16,7 +16,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Pushing Docker images to DockerHub') {
             steps {
                 script {
@@ -27,7 +27,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Deploying to Kubernetes') {
             steps {
                 script {
@@ -38,7 +38,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Manual deployment to prod') {
             when {
                 branch 'master'
@@ -53,7 +53,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
             // Clean up any resources if needed
@@ -68,6 +68,7 @@ pipeline {
 credentials {
     id = 'dockerHubCredentials'
     username = 'hasaron@gmail.com'
-    password = env.DOCKERHUB_PASSWORD
+    password = env.DOCKER_HUB_PASS
 }
+
 
