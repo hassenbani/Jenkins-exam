@@ -28,7 +28,7 @@ pipeline {
                 script {
                     def dockerPass = env.DOCKER_HUB_PASS
                     sh """
-                        docker login -u <your_docker_username> -p '${dockerPass}'
+                        docker login -u <hasaron> -p '${dockerPass}'
                         docker push hasaron/datascientestapi:v.35.0
                     """
                 }
