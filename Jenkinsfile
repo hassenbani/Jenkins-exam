@@ -14,7 +14,11 @@ pipeline {
         }
         stage('Docker Run') {
             steps {
-                sh 'docker run -d -p 80:80 --name jenkins hasaron/datascientestapi:v.35.0'
+                sh '''
+                    docker stop jenkins || true
+                    docker rm jenkins || true
+                    docker run -d -p 80:80 --name jenkins hasaron/datascientestapi:v.35.0
+                '''
                 sleep 10
             }
         }
