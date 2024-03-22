@@ -3,7 +3,6 @@ pipeline {
         DOCKER_ID = "hasaron"
         DOCKER_IMAGE = "datascientestapi"
         DOCKER_TAG = "v.${BUILD_ID}.0"
-        KUBECONFIG = '/home/ubuntu/.kube/config' // Chemin correct du fichier de configuration Kubernetes
     }
     agent any
     stages {
@@ -50,13 +49,15 @@ pipeline {
                 }
             }
         }
-        stage('Deploiement en dev') {
+        stage('Deploy to dev') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
             steps {
                 script {
                     sh '''
-                    sudo rm -Rf .kube
-                    sudo mkdir .kube
-                    sudo cp $KUBECONFIG .kube/config
+                    mkdir -p ~/.kube
+                    cat $KUBECONFIG > ~/.kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace dev
@@ -64,13 +65,15 @@ pipeline {
                 }
             }
         }
-        stage('Deploiement en staging') {
+        stage('Deploy to staging') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
             steps {
                 script {
                     sh '''
-                    sudo rm -Rf .kube
-                    sudo mkdir .kube
-                    sudo cp $KUBECONFIG .kube/config
+                    mkdir -p ~/.kube
+                    cat $KUBECONFIG > ~/.kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace staging
@@ -78,13 +81,15 @@ pipeline {
                 }
             }
         }
-        stage('Deploiement en qa') {
+        stage('Deploy to qa') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
             steps {
                 script {
                     sh '''
-                    sudo rm -Rf .kube
-                    sudo mkdir .kube
-                    sudo cp $KUBECONFIG .kube/config
+                    mkdir -p ~/.kube
+                    cat $KUBECONFIG > ~/.kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace qa
@@ -92,16 +97,18 @@ pipeline {
                 }
             }
         }
-        stage('Deploiement en prod') {
+        stage('Deploy to prod') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
             steps {
                 timeout(time: 15, unit: "MINUTES") {
                     input message: 'Do you want to deploy in production ?', ok: 'Yes'
                 }
                 script {
                     sh '''
-                    sudo rm -Rf .kube
-                    sudo mkdir .kube
-                    sudo cp $KUBECONFIG .kube/config
+                    mkdir -p ~/.kube
+                    cat $KUBECONFIG > ~/.kube/config
                     cp cast-service/values.yaml values.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
                     helm upgrade --install app cast-service --values=values.yml --namespace prod
