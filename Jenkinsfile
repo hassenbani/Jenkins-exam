@@ -1,10 +1,12 @@
 pipeline {
     environment {
-        DOCKER_ID = "hasaron"
+        DOCKER_ID = "hasaron" // Remplacez cela par votre ID Docker
         DOCKER_IMAGE = "datascientestapi"
         DOCKER_TAG = "v.${BUILD_ID}.0"
+        KUBECONFIG = credentials("config")
     }
     agent any
+
     stages {
         stage('Docker Build') {
             steps {
@@ -17,6 +19,7 @@ pipeline {
                 }
             }
         }
+        
         stage('Docker run') {
             steps {
                 script {
@@ -27,6 +30,7 @@ pipeline {
                 }
             }
         }
+
         stage('Test Acceptance') {
             steps {
                 script {
@@ -34,6 +38,7 @@ pipeline {
                 }
             }
         }
+
         stage('Docker Push') {
             environment {
                 DOCKER_PASS = credentials("DOCKER_HUB_PASS")
@@ -47,6 +52,7 @@ pipeline {
                 }
             }
         }
+
         stage('Deploiement en dev') {
             environment {
                 KUBECONFIG = credentials("config")
@@ -64,6 +70,7 @@ pipeline {
                 }
             }
         }
+
         stage('Deploiement en staging') {
             environment {
                 KUBECONFIG = credentials("config")
@@ -81,6 +88,25 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploiement en qa') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
+            steps {
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    cat $KUBECONFIG > .kube/config
+                    cp fastapi/values.yaml values.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                    helm upgrade --install app fastapi --values=values.yml --namespace qa
+                    '''
+                }
+            }
+        }
+
         stage('Deploiement en prod') {
             environment {
                 KUBECONFIG = credentials("config")
