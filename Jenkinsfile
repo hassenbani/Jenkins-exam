@@ -9,30 +9,24 @@ pipeline {
         stage('Docker Build') {
             steps {
                 script {
-                    sh '''
-                    docker rm -f jenkins
-                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG .
-                    sleep 6
-                    '''
+                    docker.build("$DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG", ".")
+                    // Suppression du conteneur Docker s'il existe déjà
+                    sh 'docker rm -f jenkins || true'
                 }
             }
         }
         stage('Docker run') {
             steps {
                 script {
-                    sh '''
-                    docker run -d -p 80:80 --name jenkins $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+                    sh 'docker run -d -p 80:80 --name jenkins $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG'
                     sleep 10
-                    '''
                 }
             }
         }
         stage('Test Acceptance') {
             steps {
                 script {
-                    sh '''
-                    curl localhost
-                    '''
+                    sh 'curl localhost'
                 }
             }
         }
@@ -42,10 +36,8 @@ pipeline {
             }
             steps {
                 script {
-                    sh '''
-                    docker login -u $DOCKER_ID -p $DOCKER_PASS
-                    docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
-                    '''
+                    sh 'docker login -u $DOCKER_ID -p $DOCKER_PASS'
+                    sh 'docker push $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG'
                 }
             }
         }
@@ -112,6 +104,7 @@ pipeline {
     }
     post {
         always {
+            // Supprimer les espaces de noms inutilisés
             sh 'kubectl delete namespace dev'
             sh 'kubectl delete namespace qa'
             sh 'kubectl delete namespace staging'
