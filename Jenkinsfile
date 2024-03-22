@@ -3,6 +3,7 @@ pipeline {
         DOCKER_ID = "hasaron"
         DOCKER_IMAGE = "datascientestapi"
         DOCKER_TAG = "v.${BUILD_ID}.0"
+        KUBECONFIG = '/home/ubuntu/.kube/config' // Chemin correct du fichier de configuration Kubernetes
     }
     agent any
     stages {
@@ -50,9 +51,6 @@ pipeline {
             }
         }
         stage('Deploiement en dev') {
-            environment {
-                KUBECONFIG = credentials("config")
-            }
             steps {
                 script {
                     sh '''
@@ -67,9 +65,6 @@ pipeline {
             }
         }
         stage('Deploiement en staging') {
-            environment {
-                KUBECONFIG = credentials("config")
-            }
             steps {
                 script {
                     sh '''
@@ -84,9 +79,6 @@ pipeline {
             }
         }
         stage('Deploiement en qa') {
-            environment {
-                KUBECONFIG = credentials("config")
-            }
             steps {
                 script {
                     sh '''
@@ -101,9 +93,6 @@ pipeline {
             }
         }
         stage('Deploiement en prod') {
-            environment {
-                KUBECONFIG = credentials("config")
-            }
             steps {
                 timeout(time: 15, unit: "MINUTES") {
                     input message: 'Do you want to deploy in production ?', ok: 'Yes'
