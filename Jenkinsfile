@@ -13,7 +13,9 @@ pipeline {
             steps {
                 script {
                     sh '''
+                    docker rm -f jenkins
                     docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./movie-service
+                    sleep 6
                     '''
                 }
             }
@@ -23,7 +25,9 @@ pipeline {
             steps {
                 script {
                     sh '''
+                    docker rm -f jenkins
                     docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./cast-service
+                    sleep 6
                     '''
                 }
             }
