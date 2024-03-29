@@ -55,6 +55,8 @@ pipeline {
                     helm upgrade --install app movie-service --values=values.yml --namespace dev
                     '''
                 }
+                // Attendre que les pods soient prêts
+                waitForPods(namespace: 'dev', timeout: 180)
             }
         }
 
@@ -69,6 +71,8 @@ pipeline {
                     helm upgrade --install app movie-service --values=values.yml --namespace staging
                     '''
                 }
+                // Attendre que les pods soient prêts
+                waitForPods(namespace: 'staging', timeout: 180)
             }
         }
 
@@ -83,6 +87,8 @@ pipeline {
                     helm upgrade --install app movie-service --values=values.yml --namespace qa
                     '''
                 }
+                // Attendre que les pods soient prêts
+                waitForPods(namespace: 'qa', timeout: 180)
             }
         }
 
@@ -100,8 +106,31 @@ pipeline {
                     helm upgrade --install app movie-service --values=values.yml --namespace prod
                     '''
                 }
+                // Attendre que les pods soient prêts
+                waitForPods(namespace: 'prod', timeout: 180)
             }
         }
     }
+}
+
+def waitForPods(Map params) {
+    def namespace = params.namespace ?: 'default'
+    def timeout = params.timeout ?: 300
+
+    def startTime = currentBuild.startTimeInMillis
+    def podCount = sh(script: "kubectl get pods --namespace=${namespace} | grep -E '(Running|Completed)' | wc -l", returnStdout: true).trim().toInteger()
+
+    while (podCount == 0) {
+        def currentTime = System.currentTimeMillis()
+        def elapsedTime = currentTime - startTime
+        if (elapsedTime > timeout * 1000) {
+            error "Timeout waiting for pods to be ready"
+            break
+        }
+        sleep 10
+        podCount = sh(script: "kubectl get pods --namespace=${namespace} | grep -E '(Running|Completed)' | wc -l", returnStdout: true).trim().toInteger()
+    }
+
+    echo "Pods are ready"
 }
 
