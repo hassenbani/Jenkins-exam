@@ -9,19 +9,16 @@ RUN apt-get update \
     && pip install --no-cache-dir -r /app/requirements.txt \
     && apt-get clean
 
-# Copier l'application et exécuter le scan de vulnérabilité
+# Copier l'application
 COPY ./app/ /app/
+
+# Installer trivy
 RUN apt-get update \
     && apt-get install -y curl \
     && curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/master/contrib/install.sh | sh -s -- -b /usr/local/bin \
-    && trivy --no-progress /app/
-
-# Nettoyer le cache et l'installation des outils
-RUN rm -rf /root/.cache/pip \
     && apt-get remove -y curl \
-    && apt-get autoremove -y \
     && apt-get clean
 
-# Commande par défaut pour l'exécution de l'application
-CMD ["python", "app.py"]
+# Exécuter le scan de vulnérabilité
+RUN trivy /app/
 
