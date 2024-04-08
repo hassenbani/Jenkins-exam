@@ -1,18 +1,34 @@
+FROM python:3.8-slim AS build
+
+WORKDIR /app
+
+# Copier d'abord les dépendances et installer les outils nécessaires
+COPY ./requirements.txt /app/requirements.txt
+RUN apt-get update \
+    && apt-get install -y gcc \
+    && pip install --no-cache-dir -r /app/requirements.txt \
+    && apt-get clean
+
+# Copier l'application
+COPY . /app/
+
+# Installer trivy
+FROM aquasec/trivy:latest AS trivy
+
+# Exécuter le scan de vulnérabilité
+RUN trivy rootfs --no-progress /
+
+# Utiliser l'image de base pour l'application
 FROM python:3.8-slim
 
 WORKDIR /app
 
-COPY ./requirements.txt /app/requirements.txt
+# Copier les fichiers de l'étape de build
+COPY --from=build /app .
 
-RUN apt-get update \
-    && apt-get install gcc -y \
-    && apt-get clean
+# Copier les résultats du scan de vulnérabilité
+COPY --from=trivy /usr/local/bin/trivy /usr/local/bin/trivy
 
-RUN pip install -r /app/requirements.txt \
-    && rm -rf /root/.cache/pip
+# Exécuter l'application
+CMD ["python", "app.py"]
 
-COPY . /app/
-# Run vulnerability scan on build image
-FROM build AS vulnscan
-COPY --from=aquasec/trivy:latest /usr/local/bin/trivy /usr/local/bin/trivy
-RUN trivy rootfs --no-progress /
