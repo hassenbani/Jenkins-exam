@@ -20,5 +20,5 @@ RUN apt-get update \
     && apt-get clean
 
 # Exécuter le scan de vulnérabilité
-RUN trivy /app/
+RUN trivy /app
 
