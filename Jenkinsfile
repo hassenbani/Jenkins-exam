@@ -74,7 +74,7 @@ pipeline {
 
         stage('Scan') {
             steps {
-                sh 'trivy --severity MEDIUM,HIGH,CRITICAL darinpope/java-web-app:latest'
+                sh 'trivy --quiet --exit-code 1 darinpope/java-web-app:latest'
             }
         }
 
