@@ -74,7 +74,7 @@ pipeline {
 
         stage('Scan') {
             steps {
-                sh 'trivy --quiet image darinpope/java-web-app:latest'
+                sh 'trivy --quiet image dockerhandson/java-web-app:latest'
             }
         }
 
