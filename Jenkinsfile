@@ -13,7 +13,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    docker rm -f jenkins || true
+                    docker rm -f jenkins
                     docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./movie-service
                     sleep 6
                     '''
@@ -25,18 +25,10 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    docker rm -f jenkins || true
+                    docker rm -f jenkins
                     docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./cast-service
                     sleep 6
                     '''
-                }
-            }
-        }
-
-        stage('Vulnerability Scan') {
-            steps {
-                script {
-                    sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG"
                 }
             }
         }
@@ -77,6 +69,12 @@ pipeline {
                     helm upgrade --install app movie-service --values=values.yml --namespace staging
                     '''
                 }
+            }
+        }
+
+        stage('Scan') {
+            steps {
+                sh 'trivy --no-progress --exit-code 1 --severity MEDIUM,HIGH,CRITICAL darinpope/java-web-app:latest'
             }
         }
 
