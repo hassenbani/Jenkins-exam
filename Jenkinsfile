@@ -74,9 +74,8 @@ pipeline {
 
         stage('Scan') {
             steps {
-                #sh 'trivy --quiet image dockerhandson/java-web-app:latest'
-                 sh trivy --quiet --severity MEDIUM,HIGH,CRITICAL dockerhandson/java-web-app:latest
-            }
+                sh 'trivy --quiet image dockerhandson/java-web-app:latest'
+             }
         }
 
         stage('Deploiement en qa') {
