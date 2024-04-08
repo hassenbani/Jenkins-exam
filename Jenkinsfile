@@ -13,7 +13,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    docker rm -f jenkins
+                    docker rm -f jenkins || true
                     docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./movie-service
                     sleep 6
                     '''
@@ -25,7 +25,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    docker rm -f jenkins
+                    docker rm -f jenkins || true
                     docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./cast-service
                     sleep 6
                     '''
@@ -36,7 +36,7 @@ pipeline {
         stage('Vulnerability Scan') {
             steps {
                 script {
-                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG
+                    sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG"
                 }
             }
         }
