@@ -1,3 +1,4 @@
+#bash toto titi
 pipeline {
     environment {
         DOCKER_ID = "hasaron" // Remplacez cela par votre ID Docker
