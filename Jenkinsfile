@@ -9,7 +9,7 @@ pipeline {
     agent any
 
     stages {
-        stage('Docker Build Stage MICROSERVICE') {
+        stage('Build MICROSERVICE') {
             steps {
                 script {
                     sh '''
@@ -21,7 +21,7 @@ pipeline {
             }
         }
 
-        stage('Build and Run MONITORING') {
+        stage('Build MONITORING') {
             steps {
                 script {
                     sh '''
@@ -33,7 +33,7 @@ pipeline {
             }
         }
 
-        stage('Build and Run MYSQL') {
+        stage('Build MYSQL') {
             steps {
                 script {
                     sh '''
@@ -58,20 +58,6 @@ pipeline {
         }
 
   
-
-        stage('Checkout with maven') {
-            steps {
-                script {
-                    sh '''
-                    mkdir -p ~/.kube
-                    cp $KUBECONFIG ~/.kube/config
-                    cp movie-service/values.yaml values.yml
-                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                    helm upgrade --install app movie-service --values=values.yml --namespace staging
-                    '''
-                }
-            }
-        }
 
         stage('Scan Trivy') {
             steps {
