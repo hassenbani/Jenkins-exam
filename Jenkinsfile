@@ -9,7 +9,20 @@ pipeline {
     agent any
 
     stages {
-        stage('Docker Build Movie Service') {
+        stage('Docker Build Build and Run Config Server') {
+            steps {
+                script {
+                    sh '''
+                    docker rm -f jenkins
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./movie-service
+                    sleep 6
+                    '''
+                }
+            }
+        }
+		
+	stages {
+        stage('Build and Run Customers Service') {
             steps {
                 script {
                     sh '''
@@ -21,7 +34,7 @@ pipeline {
             }
         }
 
-        stage('Docker Build Cast Service') {
+        stage('Build and Run Vets Service') {
             steps {
                 script {
                     sh '''
@@ -33,6 +46,90 @@ pipeline {
             }
         }
 
+		stage('Build and Run API Gateway') {
+            steps {
+                script {
+                    sh '''
+                    docker rm -f jenkins
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./cast-service
+                    sleep 6
+                    '''
+                }
+            }
+        }
+		
+		stage('Build and Run Admin Server') {
+            steps {
+                script {
+                    sh '''
+                    docker rm -f jenkins
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./cast-service
+                    sleep 6
+                    '''
+                }
+            }
+        }
+		
+		stage('Build and Run Hystrix Dashboard') {
+            steps {
+                script {
+                    sh '''
+                    docker rm -f jenkins
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./cast-service
+                    sleep 6
+                    '''
+                }
+            }
+        }
+		
+		stage('Build and Run Tracing Server') {
+            steps {
+                script {
+                    sh '''
+                    docker rm -f jenkins
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./cast-service
+                    sleep 6
+                    '''
+                }
+            }
+        }
+		
+		stage('Build and Run Grafana Server') {
+            steps {
+                script {
+                    sh '''
+                    docker rm -f jenkins
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./cast-service
+                    sleep 6
+                    '''
+                }
+            }
+        }
+		
+		stage('Build and Run Prometheus Server') {
+            steps {
+                script {
+                    sh '''
+                    docker rm -f jenkins
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./cast-service
+                    sleep 6
+                    '''
+                }
+            }
+        }
+		
+		stage('Build and Run MySQL Server') {
+            steps {
+                script {
+                    sh '''
+                    docker rm -f jenkins
+                    docker build -t $DOCKER_ID/$DOCKER_IMAGE:$DOCKER_TAG ./cast-service
+                    sleep 6
+                    '''
+                }
+            }
+        }
+		
         stage('Docker Push') {
             steps {
                 script {
@@ -58,7 +155,7 @@ pipeline {
             }
         }
 
-        stage('Deploiement en staging') {
+        stage('Checkout with maven') {
             steps {
                 script {
                     sh '''
@@ -78,7 +175,7 @@ pipeline {
              }
         }
 
-        stage('Deploiement en qa') {
+        stage('Deploiement en staging') {
             steps {
                 script {
                     sh '''
