@@ -1,6 +1,6 @@
 pipeline {
     environment {
-        DOCKER_ID = "hasaron" // Remplacez cela par votre ID Docker
+        DOCKER_ID = "hasaron"
         DOCKER_IMAGE = "datascientestapi"
         DOCKER_TAG = "v.${BUILD_ID}.0"
         KUBECONFIG = credentials("config")
