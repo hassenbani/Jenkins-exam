@@ -1,4 +1,4 @@
-pipeline {
+e {
     environment {
         DOCKER_ID = "hasaron" // Remplacez cela par votre ID Docker
         DOCKER_IMAGE = "datascientestapi"
