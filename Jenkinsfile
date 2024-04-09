@@ -20,8 +20,7 @@ pipeline {
                 }
             }
         }
-		
-	stages {
+
         stage('Build and Run Customers Service') {
             steps {
                 script {
@@ -46,7 +45,7 @@ pipeline {
             }
         }
 
-		stage('Build and Run API Gateway') {
+        stage('Build and Run API Gateway') {
             steps {
                 script {
                     sh '''
@@ -57,8 +56,8 @@ pipeline {
                 }
             }
         }
-		
-		stage('Build and Run Admin Server') {
+
+        stage('Build and Run Admin Server') {
             steps {
                 script {
                     sh '''
@@ -69,8 +68,8 @@ pipeline {
                 }
             }
         }
-		
-		stage('Build and Run Hystrix Dashboard') {
+
+        stage('Build and Run Hystrix Dashboard') {
             steps {
                 script {
                     sh '''
@@ -81,8 +80,8 @@ pipeline {
                 }
             }
         }
-		
-		stage('Build and Run Tracing Server') {
+
+        stage('Build and Run Tracing Server') {
             steps {
                 script {
                     sh '''
@@ -93,8 +92,8 @@ pipeline {
                 }
             }
         }
-		
-		stage('Build and Run Grafana Server') {
+
+        stage('Build and Run Grafana Server') {
             steps {
                 script {
                     sh '''
@@ -105,8 +104,8 @@ pipeline {
                 }
             }
         }
-		
-		stage('Build and Run Prometheus Server') {
+
+        stage('Build and Run Prometheus Server') {
             steps {
                 script {
                     sh '''
@@ -117,8 +116,8 @@ pipeline {
                 }
             }
         }
-		
-		stage('Build and Run MySQL Server') {
+
+        stage('Build and Run MySQL Server') {
             steps {
                 script {
                     sh '''
@@ -129,7 +128,7 @@ pipeline {
                 }
             }
         }
-		
+
         stage('Docker Push') {
             steps {
                 script {
