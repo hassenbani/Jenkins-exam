@@ -1,4 +1,4 @@
-pipeline {
+#pipeline {
     environment {
         DOCKER_ID = "hasaron"
         DOCKER_IMAGE = "datascientestapi"
