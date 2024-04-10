@@ -1,4 +1,3 @@
-#test
 pipeline {
     environment {
         DOCKER_ID = "hasaron"
