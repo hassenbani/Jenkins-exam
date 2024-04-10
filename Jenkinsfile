@@ -46,6 +46,12 @@ pipeline {
         }
 
 
+       stage('Scan Trivy') {
+            steps {
+                sh 'trivy --quiet image dockerhandson/java-web-app:latest'
+             }
+        }
+
         stage('Docker Push') {
             steps {
                 script {
@@ -55,14 +61,6 @@ pipeline {
                     '''
                 }
             }
-        }
-
-  
-
-        stage('Scan Trivy') {
-            steps {
-                sh 'trivy --quiet image dockerhandson/java-web-app:latest'
-             }
         }
 
         stage('Deploiement en staging') {
